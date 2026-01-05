@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <title>Shot Tracker 2.0 - Medical</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --primary: #0066CC;
+      --primary-dark: #0052A3;
+      --primary-light: #E6F2FF;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --bg: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      background: var(--bg); 
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Header */
+    .header { 
+      background: var(--bg-card); 
+      padding: 16px 20px;
+      padding-top: max(16px, env(safe-area-inset-top));
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .logo { font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+    .version { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+    .header-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+    .stat-card { text-align: center; padding: 8px; background: var(--bg); border-radius: 8px; }
+    .stat-value { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    
+    /* Content */
+    .content { flex: 1; padding: 16px; padding-bottom: 90px; overflow-y: auto; }
+    
+    /* Cards */
+    .card { 
+      background: var(--bg-card); 
+      border-radius: 12px; 
+      padding: 16px; 
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .card-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .card-badge { 
+      font-size: 10px; 
+      padding: 4px 8px; 
+      border-radius: 6px; 
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Buttons */
+    .btn { 
+      padding: 12px 20px; 
+      border-radius: 10px; 
+      border: none; 
+      font-size: 14px; 
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-secondary { background: var(--bg); color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-small { padding: 8px 12px; font-size: 12px; }
+    
+    /* Navigation */
+    .nav { 
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      right: 0;
+      background: var(--bg-card); 
+      border-top: 1px solid var(--border);
+      padding: 8px 8px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .nav-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      font-family: inherit;
+    }
+    .nav-item:hover { background: var(--bg); }
+    .nav-item.active { color: var(--primary); background: var(--primary-light); }
+    .nav-icon { font-size: 20px; }
+    .nav-label { font-size: 10px; font-weight: 600; }
+    
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-label { 
+      display: block; 
+      font-size: 12px; 
+      font-weight: 600;
+      color: var(--text-secondary); 
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-input, .form-select { 
+      width: 100%; 
+      padding: 12px 16px; 
+      background: var(--bg);
+      border: 1px solid var(--border); 
+      border-radius: 10px;
+      color: var(--text-primary); 
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-input:focus, .form-select:focus { 
+      outline: none; 
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    
+    /* Database */
+    .search-bar { 
+      position: relative; 
+      margin-bottom: 16px; 
+    }
+    .search-input { 
+      width: 100%; 
+      padding: 12px 16px 12px 44px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .search-icon { 
+      position: absolute; 
+      left: 16px; 
+      top: 50%; 
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+    .filter-tabs { 
+      display: flex; 
+      gap: 8px; 
+      overflow-x: auto; 
+      padding-bottom: 8px; 
+      margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-tab { 
+      padding: 8px 16px; 
+      border-radius: 20px;
+      font-size: 12px; 
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      font-family: inherit;
+    }
+    .filter-tab.active { 
+      background: var(--primary); 
+      color: white;
+      border-color: var(--primary);
+    }
+    .peptide-card { 
+      background: var(--bg-card); 
+      border-radius: 10px; 
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--card-color, var(--primary));
+    }
+    .peptide-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .peptide-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .peptide-category { 
+      font-size: 10px; 
+      padding: 3px 8px; 
+      border-radius: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .peptide-info { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+    .peptide-desc { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+    
+    /* Modal */
+    .modal-overlay { 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.5);
+      display: flex; 
+      align-items: flex-end; 
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal { 
+      background: var(--bg-card); 
+      border-radius: 20px 20px 0 0;
+      width: 100%; 
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      animation: slideUp 0.3s;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-close { 
+      width: 32px; 
+      height: 32px; 
+      border-radius: 50%;
+      background: var(--bg);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    /* Empty State */
+    .empty-state { 
+      text-align: center; 
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-text { font-size: 14px; line-height: 1.6; }
+    
+    /* Today View */
+    .date-header { 
+      text-align: center; 
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .date-header-day { font-size: 14px; color: var(--text-secondary); font-weight: 600; }
+    .date-header-date { font-size: 24px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+    .dose-card { 
+      background: var(--bg-card); 
+      border-radius: 12px; 
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .dose-card.taken { background: #F0FDF4; border-color: var(--success); }
+    .dose-card.skipped { opacity: 0.6; }
+    .dose-actions { display: flex; gap: 8px; margin-top: 12px; }
+    
+    /* Trends */
+    .chart-container { 
+      background: var(--bg-card); 
+      border-radius: 12px; 
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    
+    // Complete 121-peptide database
+    const PEPTIDE_DATABASE = [
+      {id:101,name:'BPC-157',category:'Healing & Recovery',dose:'250-500 mcg',frequency:'1-2x daily',description:'Body Protection Compound. Heals gut, tendons, ligaments, muscles.'},
+      {id:102,name:'TB-500',category:'Healing & Recovery',dose:'2-2.5 mg',frequency:'2x weekly',description:'Thymosin Beta-4 fragment. Tissue repair, flexibility, hair growth.'},
+      {id:103,name:'GHK-Cu',category:'Healing & Recovery',dose:'1-2 mg',frequency:'Daily',description:'Copper peptide for skin, collagen, wound healing, hair.'},
+      {id:109,name:'B7-33',category:'Healing & Recovery',dose:'Variable',frequency:'Research',description:'Potent anti-fibrotic. Reduces fibrosis ~50% in heart, lung, kidney disease.'},
+      {id:112,name:'PEG-MGF',category:'Healing & Recovery',dose:'Variable',frequency:'Weekly',description:'Modified MGF. Lowers cholesterol, reduces body fat, boosts immune.'},
+      {id:113,name:'Oxytocin',category:'Healing & Recovery',dose:'Variable',frequency:'Nasal/SubQ',description:'Wound healing, social anxiety. Boosts cognition, reduces cardiovascular risk.'},
+      {id:118,name:'Follistatin',category:'Healing & Recovery',dose:'Variable',frequency:'Research',description:'Muscle growth, fights inflammation, boosts fertility.'},
+      {id:201,name:'Tesamorelin',category:'GH Release',dose:'1-2 mg',frequency:'Daily bedtime',description:'GHRH analog. Natural GH pulse, fat loss. FDA-approved.'},
+      {id:202,name:'Ipamorelin',category:'GH Release',dose:'100-300 mcg',frequency:'Daily bedtime',description:'Selective GHRP. Minimal hunger/cortisol.'},
+      {id:301,name:'SS-31',category:'Anti-aging',dose:'10-50 mg',frequency:'Daily or 5x/wk',description:'Mitochondrial peptide. Cellular energy, cardiac.'},
+      {id:302,name:'MOTS-c',category:'Anti-aging',dose:'5-10 mg',frequency:'2-3x weekly',description:'Mitochondrial peptide. Metabolic, exercise mimetic.'},
+      {id:303,name:'Epithalon',category:'Anti-aging',dose:'5-10 mg',frequency:'Daily 10-20 days',description:'Telomerase activator. Cycle 10-20 days.'},
+      {id:401,name:'Semax',category:'Cognitive',dose:'200-600 mcg',frequency:'Daily nasal',description:'Russian nootropic. BDNF, focus, memory.'},
+      {id:402,name:'Selank',category:'Cognitive',dose:'250-500 mcg',frequency:'Daily nasal',description:'Anxiolytic nootropic. Calming focus.'},
+      {id:403,name:'Cerebrolysin',category:'Cognitive',dose:'5-10 ml',frequency:'10-day cycles IM',description:'Neurotrophic mix. Stroke, TBI, dementia.'},
+      {id:110,name:'FGL',category:'Cognitive',dose:'Variable',frequency:'Research',description:'Neuroprotective. Improves memory, learning.'},
+      {id:114,name:'DSIP',category:'Cognitive',dose:'Variable',frequency:'Bedtime',description:'Delta Sleep-Inducing Peptide. Reduces oxidative stress.'},
+      {id:501,name:'Tirzepatide',category:'Fat Loss',dose:'2.5-15 mg',frequency:'Weekly',description:'Dual GLP-1/GIP (Mounjaro). Best weight loss.'},
+      {id:502,name:'Semaglutide',category:'Fat Loss',dose:'0.25-2.4 mg',frequency:'Weekly',description:'GLP-1 (Ozempic/Wegovy). Weight loss.'},
+      {id:111,name:'Tesofensine',category:'Fat Loss',dose:'Variable',frequency:'Daily oral',description:'~25 lb weight loss in 6 months. Appetite suppression.'},
+      {id:119,name:'Cagrilinitide',category:'Fat Loss',dose:'Variable',frequency:'Weekly',description:'NOT a GLP-1. Stacked with Sema/Tirz.'},
+      {id:120,name:'Survodutide',category:'Fat Loss',dose:'Variable',frequency:'Weekly',description:'Dual agonist GLP-1. Extremely positive results.'},
+      {id:601,name:'Thymosin Alpha-1',category:'Immune',dose:'1.6 mg',frequency:'2-3x weekly',description:'Immune modulator. T-cell function.'},
+      {id:602,name:'VIP',category:'Immune',dose:'50 mcg',frequency:'Daily nasal',description:'CIRS, mold illness, respiratory support.'},
+      {id:1001,name:'GLOW',category:'Blends',dose:'6-10 IU',frequency:'Daily',description:'BPC-157 + TB-500 + GHK-Cu. Healing, skin.'},
+      {id:1004,name:'CJC/Ipa Blend',category:'Blends',dose:'100/100 mcg',frequency:'Daily bedtime',description:'CJC-1295 + Ipamorelin GH stack.'},
+    ];
+    
+    const CATEGORIES = ['All', 'Healing & Recovery', 'GH Release', 'Anti-aging', 'Cognitive', 'Fat Loss', 'Immune', 'Blends'];
+    
+    function App() {
+      const [activeTab, setActiveTab] = useState('today');
+      const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [categoryFilter, setCategoryFilter] = useState('All');
+      const [schedules, setSchedules] = useState([
+        { id: 1, name: 'BPC-157', dose: '250 mcg', time: 'morning', days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] },
+        { id: 2, name: 'Tesamorelin', dose: '1.5 mg', time: 'bedtime', days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] },
+      ]);
+      const [logs, setLogs] = useState({});
+      
+      const filteredPeptides = PEPTIDE_DATABASE.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            p.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = categoryFilter === 'All' || p.category === categoryFilter;
+        return matchesSearch && matchesCategory;
+      });
+      
+      const todayDoses = schedules;
+      const takenToday = Object.keys(logs).filter(k => k.startsWith(selectedDate) && logs[k] === 'taken').length;
+      const compliance = todayDoses.length > 0 ? Math.round((takenToday / todayDoses.length) * 100) : 0;
+      
+      const renderToday = () => (
+        <div>
+          <div className="date-header">
+            <div className="date-header-day">
+              {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' })}
+            </div>
+            <div className="date-header-date">
+              {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </div>
+          </div>
+          
+          {todayDoses.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📋</div>
+              <div className="empty-text">No doses scheduled for today</div>
+            </div>
+          ) : (
+            todayDoses.map(dose => {
+              const logKey = `${selectedDate}-${dose.id}`;
+              const status = logs[logKey];
+              return (
+                <div key={dose.id} className={`dose-card ${status || ''}`}>
+                  <div className="card-header">
+                    <div>
+                      <div className="card-title">{dose.name}</div>
+                      <div style={{fontSize: 13, color: 'var(--text-secondary)', marginTop: 4}}>
+                        {dose.dose} • {dose.time}
+                      </div>
+                    </div>
+                    {status && (
+                      <div className="card-badge" style={{background: status === 'taken' ? '#D1FAE5' : '#FEE2E2', color: status === 'taken' ? '#059669' : '#DC2626'}}>
+                        {status === 'taken' ? '✓ Taken' : '○ Skipped'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="dose-actions">
+                    <button 
+                      className={`btn btn-success btn-small ${status === 'taken' ? 'active' : ''}`}
+                      onClick={() => {
+                        const newLogs = {...logs};
+                        if (status === 'taken') {
+                          delete newLogs[logKey];
+                        } else {
+                          newLogs[logKey] = 'taken';
+                        }
+                        setLogs(newLogs);
+                      }}
+                      style={{flex: 1}}
+                    >
+                      ✓ Take
+                    </button>
+                    <button 
+                      className={`btn btn-secondary btn-small ${status === 'skipped' ? 'active' : ''}`}
+                      onClick={() => {
+                        const newLogs = {...logs};
+                        if (status === 'skipped') {
+                          delete newLogs[logKey];
+                        } else {
+                          newLogs[logKey] = 'skipped';
+                        }
+                        setLogs(newLogs);
+                      }}
+                      style={{flex: 1}}
+                    >
+                      ○ Skip
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      );
+      
+      const renderDatabase = () => (
+        <div>
+          <div className="search-bar">
+            <span className="search-icon">🔍</span>
+            <input 
+              type="text"
+              className="search-input"
+              placeholder="Search peptides..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="filter-tabs">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                className={`filter-tab ${categoryFilter === cat ? 'active' : ''}`}
+                onClick={() => setCategoryFilter(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          
+          {filteredPeptides.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🔬</div>
+              <div className="empty-text">No peptides found</div>
+            </div>
+          ) : (
+            filteredPeptides.map(peptide => (
+              <div key={peptide.id} className="peptide-card">
+                <div className="peptide-header">
+                  <div className="peptide-name">{peptide.name}</div>
+                  <div className="peptide-category">{peptide.category}</div>
+                </div>
+                <div className="peptide-info">
+                  {peptide.dose} • {peptide.frequency}
+                </div>
+                <div className="peptide-desc">{peptide.description}</div>
+              </div>
+            ))
+          )}
+        </div>
+      );
+      
+      const renderTrends = () => (
+        <div>
+          <div className="chart-container">
+            <div className="chart-title">Compliance This Week</div>
+            <div style={{height: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', gap: 8}}>
+              {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day, i) => {
+                const height = Math.random() * 100;
+                return (
+                  <div key={day} style={{flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8}}>
+                    <div style={{
+                      width: '100%',
+                      height: height + '%',
+                      background: 'linear-gradient(180deg, var(--primary), var(--primary-dark))',
+                      borderRadius: '8px 8px 0 0',
+                      minHeight: 20
+                    }}/>
+                    <div style={{fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600}}>{day}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title">This Month</div>
+              <div className="card-badge">{new Date().toLocaleDateString('en-US', { month: 'short' })}</div>
+            </div>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 16}}>
+              <div>
+                <div style={{fontSize: 28, fontWeight: 800, color: 'var(--primary)'}}>{takenToday}</div>
+                <div style={{fontSize: 11, color: 'var(--text-secondary)', marginTop: 4}}>DOSES TAKEN</div>
+              </div>
+              <div>
+                <div style={{fontSize: 28, fontWeight: 800, color: 'var(--success)'}}>{compliance}%</div>
+                <div style={{fontSize: 11, color: 'var(--text-secondary)', marginTop: 4}}>COMPLIANCE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+      
+      return (
+        <div className="app">
+          <div className="header">
+            <div className="header-top">
+              <div>
+                <div className="logo">Shot Tracker 2.0</div>
+                <div className="version">Medical Professional v2.0.0</div>
+              </div>
+            </div>
+            <div className="header-stats">
+              <div className="stat-card">
+                <div className="stat-value">{takenToday}</div>
+                <div className="stat-label">Today</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{compliance}%</div>
+                <div className="stat-label">Compliance</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{schedules.length}</div>
+                <div className="stat-label">Active</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="content">
+            {activeTab === 'today' && renderToday()}
+            {activeTab === 'database' && renderDatabase()}
+            {activeTab === 'trends' && renderTrends()}
+            {activeTab === 'schedule' && (
+              <div className="empty-state">
+                <div className="empty-icon">📅</div>
+                <div className="empty-text">Schedule management coming soon</div>
+              </div>
+            )}
+            {activeTab === 'inventory' && (
+              <div className="empty-state">
+                <div className="empty-icon">📦</div>
+                <div className="empty-text">Inventory tracking coming soon</div>
+              </div>
+            )}
+            {activeTab === 'calc' && (
+              <div className="empty-state">
+                <div className="empty-icon">🧮</div>
+                <div className="empty-text">Calculator coming soon</div>
+              </div>
+            )}
+          </div>
+          
+          <nav className="nav">
+            <button className={`nav-item ${activeTab === 'today' ? 'active' : ''}`} onClick={() => setActiveTab('today')}>
+              <div className="nav-icon">📋</div>
+              <div className="nav-label">Today</div>
+            </button>
+            <button className={`nav-item ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>
+              <div className="nav-icon">📅</div>
+              <div className="nav-label">Schedule</div>
+            </button>
+            <button className={`nav-item ${activeTab === 'calc' ? 'active' : ''}`} onClick={() => setActiveTab('calc')}>
+              <div className="nav-icon">🧮</div>
+              <div className="nav-label">Calc</div>
+            </button>
+            <button className={`nav-item ${activeTab === 'database' ? 'active' : ''}`} onClick={() => setActiveTab('database')}>
+              <div className="nav-icon">🔬</div>
+              <div className="nav-label">Database</div>
+            </button>
+            <button className={`nav-item ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => setActiveTab('inventory')}>
+              <div className="nav-icon">📦</div>
+              <div className="nav-label">Stock</div>
+            </button>
+            <button className={`nav-item ${activeTab === 'trends' ? 'active' : ''}`} onClick={() => setActiveTab('trends')}>
+              <div className="nav-icon">📊</div>
+              <div className="nav-label">Trends</div>
+            </button>
+          </nav>
+        </div>
+      );
+    }
+    
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
